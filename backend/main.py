@@ -37,19 +37,18 @@ def download_video(file_id: str, url: str, quality: str):
     output_template = f"{DOWNLOAD_DIR}/{file_id}.%(ext)s"
 
     if quality == "360":
-        fmt = "bestvideo[height<=360]+bestaudio/best"
+        fmt = "best[ext=mp4][height<=360]"
     elif quality == "720":
-        fmt = "bestvideo[height<=720]+bestaudio/best"
+        fmt = "best[ext=mp4][height<=720]"
     else:
-        fmt = "bestvideo+bestaudio/best"
+        fmt = "best[ext=mp4]"
 
     ydl_opts = {
         "outtmpl": output_template,
         "format": fmt,
-        "merge_output_format": "mp4",
+        "quiet": True,
         "noplaylist": True,
     }
-
 
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
         ydl.extract_info(url, download=True)
@@ -90,14 +89,21 @@ def prepare_download(url: str = Form(...), quality: str = Form("best")):
     }
 
 # ---------------- STEP 2: STATUS ----------------
+# @app.get("/status/{file_id}")
+# def check_status(file_id: str):
+#     for filename in os.listdir(DOWNLOAD_DIR):
+#         # final merged file only
+#         if filename == f"{file_id}.mp4":
+#             return {"ready": True}
+
+#     return {"ready": False}
+
 @app.get("/status/{file_id}")
 def check_status(file_id: str):
-    for filename in os.listdir(DOWNLOAD_DIR):
-        # final merged file only
-        if filename == f"{file_id}.mp4":
-            return {"ready": True}
+    return {
+        "ready": os.path.exists(f"{DOWNLOAD_DIR}/{file_id}.mp4")
+    }
 
-    return {"ready": False}
 
 # ---------------- STEP 3: DOWNLOAD ----------------
 @app.get("/download/{file_id}")
