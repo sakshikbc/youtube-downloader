@@ -12,5 +12,3 @@ A full-stack YouTube video downloader built using:
 - MP4 downloads
 - Quality selection (360p / 720p / Best)
 - Clean responsive UI
-
-⚠️ For educational purposes only.

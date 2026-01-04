@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Preparing Download</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="bg-slate-50 min-h-screen flex items-center justify-center px-4">
+
+<div class="bg-white rounded-2xl shadow-xl p-8 w-full max-w-md text-center">
+
+  <!-- Spinner -->
+  <!-- Success Icon -->
+<div
+  class="mx-auto h-12 w-12 flex items-center justify-center
+         rounded-full bg-green-100 mb-6"
+>
+  <svg
+    class="h-6 w-6 text-green-600"
+    fill="none"
+    stroke="currentColor"
+    stroke-width="3"
+    viewBox="0 0 24 24"
+  >
+    <path
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      d="M5 13l4 4L19 7"
+    />
+  </svg>
+</div>
+
+<h1 class="text-xl font-bold text-slate-900 mb-2">
+  Your Video Is Ready
+</h1>
+
+<p class="text-slate-600 mb-6">
+  Your download is starting automatically.
+  If it doesn’t begin in a few seconds, you can start it manually below.
+</p>
+
+
+  <!-- Fallback -->
+  <a
+    id="manualDownload"
+    class="hidden inline-block bg-green-500 hover:bg-green-600
+           text-white font-semibold px-6 py-3 rounded-xl transition"
+  >
+    Download Now
+  </a>
+
+  <p id="statusText" class="text-xs text-slate-400 mt-5">
+    Checking download status…
+  </p>
+</div>
+
+<script>
+// const API = "https://your-app.onrender.com"; 
+const API = "http://127.0.0.1:8000";
+
+// use http://127.0.0.1:8000 locally
+
+const params = new URLSearchParams(window.location.search);
+const fileId = params.get("id");
+
+const statusText = document.getElementById("statusText");
+const manualBtn = document.getElementById("manualDownload");
+
+const checkInterval = 2000; // 2 seconds
+let attempts = 0;
+const maxAttempts = 60; // 2 minutes
+
+const interval = setInterval(async () => {
+  attempts++;
+
+  try {
+    const res = await fetch(`${API}/status/${fileId}`);
+    const data = await res.json();
+
+    if (data.ready === true) {
+      clearInterval(interval);
+
+      const downloadUrl = `${API}/download/${fileId}`;
+      manualBtn.href = downloadUrl;
+      manualBtn.classList.remove("hidden");
+
+      statusText.innerText = "Download ready. Starting…";
+
+      // ✅ AUTO-START DOWNLOAD
+      window.location.href = downloadUrl;
+    }
+
+    if (attempts >= maxAttempts) {
+      clearInterval(interval);
+      statusText.innerText =
+        "Still processing. Please try again in a moment.";
+    }
+
+  } catch {
+    statusText.innerText = "Checking status…";
+  }
+}, checkInterval);
+</script>
+
+</body>
+</html>
