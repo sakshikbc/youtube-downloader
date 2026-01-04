@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>YouTube MP4 Downloader</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 min-h-screen flex items-center justify-center">
+
+<div class="bg-white p-8 rounded-xl shadow-lg w-full max-w-md">
+  <h1 class="text-2xl font-bold text-center text-red-600 mb-4">
+    YouTube MP4 Downloader
+  </h1>
+
+  <form id="form" class="space-y-4">
+    <input
+      type="url"
+      id="url"
+      required
+      placeholder="Paste YouTube URL"
+      class="w-full border px-4 py-2 rounded-lg"
+    />
+
+    <select
+      id="quality"
+      class="w-full border px-4 py-2 rounded-lg"
+    >
+      <option value="360">MP4 – 360p</option>
+      <option value="720">MP4 – 720p</option>
+      <option value="best">MP4 – Best Quality</option>
+    </select>
+
+    <button
+      type="submit"
+      class="w-full bg-red-500 text-white py-2 rounded-lg hover:bg-red-600"
+    >
+      Download MP4
+    </button>
+  </form>
+
+  <p id="status" class="text-center text-sm mt-4"></p>
+</div>
+
+<script>
+document.getElementById("form").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const status = document.getElementById("status");
+  status.innerText = "Downloading... ⏳";
+
+  const formData = new FormData();
+  formData.append("url", document.getElementById("url").value);
+  formData.append("quality", document.getElementById("quality").value);
+
+  try {
+    const response = await fetch("http://127.0.0.1:8000/download/mp4", {
+      method: "POST",
+      body: formData
+    });
+
+    if (!response.ok) throw new Error();
+
+    const blob = await response.blob();
+    const a = document.createElement("a");
+    a.href = window.URL.createObjectURL(blob);
+    a.download = "video.mp4";
+    a.click();
+
+    status.innerText = "Download completed ✅";
+  } catch {
+    status.innerText = "Failed ❌";
+  }
+});
+</script>
+
+</body>
+</html>
