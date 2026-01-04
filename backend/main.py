@@ -34,24 +34,32 @@ def is_expired(file_path: str, ttl: int):
 
 # ---------------- VIDEO DOWNLOAD ----------------
 def download_video(file_id: str, url: str, quality: str):
-    output_template = f"{DOWNLOAD_DIR}/{file_id}.%(ext)s"
+    try:
+        output_template = f"{DOWNLOAD_DIR}/{file_id}.%(ext)s"
 
-    if quality == "360":
-        fmt = "best[ext=mp4][height<=360]"
-    elif quality == "720":
-        fmt = "best[ext=mp4][height<=720]"
-    else:
-        fmt = "best[ext=mp4]"
+        if quality == "360":
+            fmt = "best[ext=mp4][height<=360]"
+        elif quality == "720":
+            fmt = "best[ext=mp4][height<=720]"
+        else:
+            fmt = "best[ext=mp4]"
 
-    ydl_opts = {
-        "outtmpl": output_template,
-        "format": fmt,
-        "quiet": True,
-        "noplaylist": True,
-    }
+        ydl_opts = {
+            "outtmpl": output_template,
+            "format": fmt,
+            "quiet": True,
+            "noplaylist": True,
+        }
 
-    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-        ydl.extract_info(url, download=True)
+        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+            ydl.extract_info(url, download=True)
+
+    except Exception as e:
+        # mark as failed
+        with open(f"{DOWNLOAD_DIR}/{file_id}.error", "w") as f:
+            f.write(str(e))
+        print(f"❌ Download failed for {file_id}: {e}")
+
 
 # ---------------- AUTO CLEANUP WORKER ----------------
 def cleanup_worker():
@@ -100,9 +108,14 @@ def prepare_download(url: str = Form(...), quality: str = Form("best")):
 
 @app.get("/status/{file_id}")
 def check_status(file_id: str):
-    return {
-        "ready": os.path.exists(f"{DOWNLOAD_DIR}/{file_id}.mp4")
-    }
+    if os.path.exists(f"{DOWNLOAD_DIR}/{file_id}.mp4"):
+        return {"ready": True}
+
+    if os.path.exists(f"{DOWNLOAD_DIR}/{file_id}.error"):
+        return {"failed": True}
+
+    return {"ready": False}
+
 
 
 # ---------------- STEP 3: DOWNLOAD ----------------

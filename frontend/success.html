@@ -90,6 +90,13 @@ const interval = setInterval(async () => {
       window.location.href = downloadUrl;
     }
 
+    if (data.failed) {
+    statusText.innerText =
+        "This video is restricted by YouTube. Please try another video.";
+    clearInterval(interval);
+    }
+
+
     if (attempts >= maxAttempts) {
       clearInterval(interval);
       statusText.innerText =
